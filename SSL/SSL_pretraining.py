@@ -42,8 +42,24 @@ from SSL.simmim_dataloader import *
 
 
 class SSL_pretraining():
+    """ Class used to perform SSL pretraing, including Axial Distance Prediction
+    """
 
-    def __init__(self, datafolder, validation_datafolder = None, nifti_dir = None, pairs_per_patient = 100, max_patients = None, max_distance_cm = None, SSL_method = "byol", model_type = "swin_unet", savefolder="pretrained_models", savefolder_id = ""):
+    def __init__(self, datafolder, validation_datafolder = None, nifti_dir = None, pairs_per_patient = 100, max_patients = None, max_distance_cm = None, SSL_method = "distance", model_type = "swin_unet", savefolder="pretrained_models", savefolder_id = ""):
+        """Initialize the SSL pretraining class
+
+        Args:
+            datafolder (str): datafolder path
+            validation_datafolder (str, optional): validation folder path. Defaults to None.
+            nifti_dir (str, optional): path to nifti directory. Defaults to None.
+            pairs_per_patient (int, optional): number of slice pairs per patient for ADP. Defaults to 100.
+            max_patients (int, optional): maximum number of patients to use for ADP. Defaults to None.
+            max_distance_cm (int, optional): maximum distance between slices in a pair for ADP. Defaults to None.
+            SSL_method (str, optional): SSL method to use. Defaults to "distance".
+            model_type (str, optional): modeltype. Defaults to "swin_unet".
+            savefolder (str, optional): path to save model to. Defaults to "pretrained_models".
+            savefolder_id (str, optional): id to append to savefolder folder. Defaults to "".
+        """
         self.datafolder = datafolder
         self.validation_datafolder = validation_datafolder
         self.nifti_dir = nifti_dir
@@ -77,6 +93,12 @@ class SSL_pretraining():
 
 
     def load_data(self, transform, batch_size):
+        """Load the data for the SSL pretraining
+
+        Args:
+            transform: LightlySSL transform
+            batch_size: batch size for the dataloader
+        """
 
         match self.SSL_method:
             case "distance":
@@ -119,7 +141,17 @@ class SSL_pretraining():
 
 
     def train(self, backbone, batch_size = 224, epochs = 250, device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")):
+        """ perform pretraining
 
+        Args:
+            backbone: model type
+            batch_size (int, optional): batch size. Defaults to 224.
+            epochs (int, optional): number of pretraining epochs. Defaults to 250.
+            device (torch.device, optional): use gpu or not. Defaults to torch.device("cuda:0" if torch.cuda.is_available() else "cpu").
+
+        Raises:
+            ValueError: _description_
+        """
         self.device = device
 
         if isinstance(backbone, SwinTransformerSys):
@@ -354,6 +386,11 @@ class SSL_pretraining():
 
 
     def save_history(self, use_val_loss = False):
+        """saves the training history to a csv file
+
+        Args:
+            use_val_loss (bool, optional): whether to include validation loss. Defaults to False.
+        """
         if os.path.exists(os.path.join(self.savefolder, "training_log.csv")):
             with open(os.path.join(self.savefolder, "training_log.csv"), "a") as f:
                 if use_val_loss:
